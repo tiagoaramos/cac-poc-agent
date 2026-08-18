@@ -1,49 +1,78 @@
-# POC LLM Assistant
+# CAC POC Agent — Validação de insumos
 
-Proof of concept: busca dados de API externa → processa com LLM → exibe resposta.
+Portal da empresa **9999 (EMPRESA TESTE)** para listar obras, analisar insumos do orçamento com LLM e aplicar correções na API UAU.
 
-## Stack
+Fluxo:
 
-- **Next.js 14** (App Router) — frontend + API routes serverless
-- **Tailwind CSS** — estilização
-- **Adapter Pattern** — LLM provider configurável (OpenAI, Groq, Google, Mock)
-- **PokeAPI** — API externa de exemplo (troque por qualquer outra)
+1. Lista as obras da empresa 9999
+2. Ao clicar na obra, busca os insumos em `Orcamento/ConsultarInsumosPorChave`
+3. Envia os insumos para um prompt de análise (OpenAI ou provider de teste)
+4. Mostra inconsistências (categoria errada, tipo incompatível, etc.)
+5. O revisor confirma e a correção vai para a API UAU (`InsumosGeral/AtualizarInsumosGeral` ou exclusão no orçamento)
 
-## Setup Local
+## Setup
 
 ```bash
 npm install
+cp .env.example .env.local
+# preencha credenciais UAU no .env.local
 npm run dev
 ```
 
-Acesse http://localhost:3000
+Acesse http://localhost:3000 — a tela de login usa `AUTH_ADMIN_USER` e `AUTH_ADMIN_PASSWORD` do `.env.local`.
 
-## Configuração LLM
-
-Por padrão usa o provider **mock** (sem API key).
-
-Para usar um provider real, configure no `.env.local`:
+## Login do portal
 
 ```env
-LLM_PROVIDER=groq
-GROQ_API_KEY=your-key-here
+AUTH_ADMIN_USER=admin
+AUTH_ADMIN_PASSWORD=admin
+AUTH_SECRET=troque-este-segredo
 ```
 
-Ou configure direto na UI via painel ⚙️ Config.
+Se a senha tiver `#`, use aspas. Reinicie o `npm run dev` depois de alterar o `.env.local`.
 
-## Deploy (Vercel)
+## Provider de teste (sem tokens)
 
-1. Push no GitHub
-2. Importe o projeto na [Vercel](https://vercel.com)
-3. Configure as env vars (LLM_PROVIDER, API keys)
-4. Deploy automático
+Por padrão `LLM_PROVIDER=test`. Esse provider **não chama OpenAI**. Ele trata todo insumo da categoria `pro` (Projeto) como inválido, para validar o fluxo completo.
 
-## Adicionar novo LLM Provider
+Altere o tipo marcado com:
 
-1. Crie uma classe em `lib/llm/providers/` implementando a interface `LLMProvider`
-2. Registre no `lib/llm/factory.ts`
-3. Adicione a opção no `components/ConfigPanel.tsx`
+```env
+TEST_LLM_FLAGGED_CATEGORY=pro
+```
 
-## Trocar a API externa
+Categorias comuns na obra 9999: `pro`, `aco`, `con`, `rhu`, `des`, `sem`.
 
-Edite `lib/external-api.ts` — altere a função `fetchExternalData` para chamar a API desejada.
+## UAU
+
+Credenciais no `.env.local` (mesmo ambiente de teste usado em `cac-engenharia`):
+
+- `UAU_BASE_URL=https://apiglobalteccac.fwc.cloud:36000`
+- `UAU_USUARIO` / `UAU_SENHA` — se a senha tiver `#`, use aspas (`UAU_SENHA="..."`)
+- `UAU_INTEGRATION_TOKEN`
+
+Para desenvolver sem a API:
+
+```env
+UAU_MOCK=true
+```
+
+## OpenAI
+
+```env
+LLM_PROVIDER=openai
+OPENAI_API_KEY=sk-...
+OPENAI_MODEL=gpt-4o-mini
+```
+
+Também dá para trocar o provider no botão **LLM** do cabeçalho.
+
+## Correção no UAU
+
+Cada inconsistência sugere uma ação:
+
+- `reclassify` — atualiza a categoria em `InsumosGeral/AtualizarInsumosGeral`
+- `inactivate` — inativa o insumo no cadastro geral
+- `remove` — remove o insumo do orçamento (`Orcamento/ExcluirInsumoOrcamento`)
+
+O provider de teste sugere reclassificar `pro` → `des` (Despesas).

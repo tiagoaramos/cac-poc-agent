@@ -1,21 +1,20 @@
+import { findUserMessage } from "../helpers";
 import { LLMProvider, LLMRequest, LLMResponse } from "../types";
 
-/**
- * Mock provider para desenvolvimento e testes.
- * Retorna uma resposta simulada sem chamar nenhuma API externa.
- */
 export class MockProvider implements LLMProvider {
   name = "mock";
 
   async chat(request: LLMRequest): Promise<LLMResponse> {
-    const userMessage = request.messages.find((m) => m.role === "user");
-    const contextMessage = request.messages.find((m) => m.role === "system");
-
-    await new Promise((resolve) => setTimeout(resolve, 800));
+    await new Promise((resolve) => setTimeout(resolve, 400));
+    const snippet = findUserMessage(request.messages).slice(0, 180);
 
     return {
-      content: `**[Mock LLM Response]**\n\nRecebi sua pergunta e o contexto dos dados externos.\n\n**Contexto recebido:**\n${contextMessage?.content?.substring(0, 200) || "Nenhum"}\n\n**Sua pergunta:**\n${userMessage?.content || "Nenhuma"}\n\n---\n_Esta é uma resposta simulada. Configure um provider real (OpenAI, Groq, Google) no painel de configurações para respostas reais._`,
-      provider: "mock",
+      content: JSON.stringify({
+        summary: "Resposta genérica do mock. Use o provider de teste para simular erros de insumo.",
+        issues: [],
+        echo: snippet,
+      }),
+      provider: this.name,
       model: "mock-v1",
       usage: {
         promptTokens: 0,

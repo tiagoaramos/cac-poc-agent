@@ -5,28 +5,31 @@ export class GroqProvider implements LLMProvider {
   private apiKey: string;
   private model: string;
 
-  constructor(apiKey: string, model: string = "llama-3.1-8b-instant") {
+  constructor(apiKey: string, model = "llama-3.1-8b-instant") {
     this.apiKey = apiKey;
     this.model = model;
   }
 
   async chat(request: LLMRequest): Promise<LLMResponse> {
-    const response = await fetch(
-      "https://api.groq.com/openai/v1/chat/completions",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${this.apiKey}`,
-        },
-        body: JSON.stringify({
-          model: this.model,
-          messages: request.messages,
-          temperature: request.temperature ?? 0.7,
-          max_tokens: request.maxTokens ?? 1024,
-        }),
-      }
-    );
+    const body: Record<string, unknown> = {
+      model: this.model,
+      messages: request.messages,
+      temperature: request.temperature ?? 0.2,
+      max_tokens: request.maxTokens ?? 2048,
+    };
+
+    if (request.jsonMode) {
+      body.response_format = { type: "json_object" };
+    }
+
+    const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${this.apiKey}`,
+      },
+      body: JSON.stringify(body),
+    });
 
     if (!response.ok) {
       const error = await response.text();

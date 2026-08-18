@@ -7,6 +7,7 @@ export interface LLMRequest {
   messages: LLMMessage[];
   temperature?: number;
   maxTokens?: number;
+  jsonMode?: boolean;
 }
 
 export interface LLMResponse {

@@ -1,10 +1,6 @@
 "use client";
 
-interface LLMConfig {
-  provider: string;
-  apiKey: string;
-  model: string;
-}
+import { LLMConfig } from "./LLMConfigProvider";
 
 interface ConfigPanelProps {
   config: LLMConfig;
@@ -12,94 +8,84 @@ interface ConfigPanelProps {
 }
 
 const PROVIDERS = [
-  { value: "mock", label: "Mock (sem API)", needsKey: false },
+  {
+    value: "test",
+    label: "Teste (sem tokens)",
+    needsKey: false,
+  },
   { value: "openai", label: "OpenAI", needsKey: true },
-  { value: "groq", label: "Groq (free tier)", needsKey: true },
-  { value: "google", label: "Google AI (Gemini)", needsKey: true },
+  { value: "groq", label: "Groq", needsKey: true },
+  { value: "mock", label: "Mock genérico", needsKey: false },
 ];
 
 export default function ConfigPanel({
   config,
   onConfigChange,
 }: ConfigPanelProps) {
-  const selectedProvider = PROVIDERS.find((p) => p.value === config.provider);
+  const selected = PROVIDERS.find((provider) => provider.value === config.provider);
 
   return (
-    <div className="mb-6 p-4 bg-slate-50 border border-slate-200 rounded-lg">
-      <h3 className="text-sm font-semibold text-slate-700 mb-3">
-        Configuração da LLM
-      </h3>
-
+    <div className="mb-6 p-4 bg-white/10 border border-white/15 rounded-lg">
+      <h3 className="text-sm font-semibold text-white mb-3">Provider de LLM</h3>
       <div className="grid gap-3 sm:grid-cols-3">
         <div>
-          <label
-            htmlFor="provider"
-            className="block text-xs text-slate-500 mb-1"
-          >
+          <label htmlFor="provider" className="block text-xs text-slate-300 mb-1">
             Provider
           </label>
           <select
             id="provider"
             value={config.provider}
-            onChange={(e) =>
-              onConfigChange({ ...config, provider: e.target.value })
+            onChange={(event) =>
+              onConfigChange({ ...config, provider: event.target.value })
             }
-            className="w-full px-3 py-2 text-sm border border-slate-300 rounded-md"
+            className="w-full px-3 py-2 text-sm rounded-md bg-slate-900 text-white border border-white/20"
           >
-            {PROVIDERS.map((p) => (
-              <option key={p.value} value={p.value}>
-                {p.label}
+            {PROVIDERS.map((provider) => (
+              <option key={provider.value} value={provider.value}>
+                {provider.label}
               </option>
             ))}
           </select>
         </div>
 
-        {selectedProvider?.needsKey && (
+        {selected?.needsKey && (
           <>
             <div>
-              <label
-                htmlFor="apiKey"
-                className="block text-xs text-slate-500 mb-1"
-              >
+              <label htmlFor="apiKey" className="block text-xs text-slate-300 mb-1">
                 API Key
               </label>
               <input
                 id="apiKey"
                 type="password"
                 value={config.apiKey}
-                onChange={(e) =>
-                  onConfigChange({ ...config, apiKey: e.target.value })
+                onChange={(event) =>
+                  onConfigChange({ ...config, apiKey: event.target.value })
                 }
                 placeholder="sk-..."
-                className="w-full px-3 py-2 text-sm border border-slate-300 rounded-md"
+                className="w-full px-3 py-2 text-sm rounded-md bg-slate-900 text-white border border-white/20"
               />
             </div>
-
             <div>
-              <label
-                htmlFor="model"
-                className="block text-xs text-slate-500 mb-1"
-              >
-                Model (opcional)
+              <label htmlFor="model" className="block text-xs text-slate-300 mb-1">
+                Modelo (opcional)
               </label>
               <input
                 id="model"
                 type="text"
                 value={config.model}
-                onChange={(e) =>
-                  onConfigChange({ ...config, model: e.target.value })
+                onChange={(event) =>
+                  onConfigChange({ ...config, model: event.target.value })
                 }
                 placeholder="gpt-4o-mini"
-                className="w-full px-3 py-2 text-sm border border-slate-300 rounded-md"
+                className="w-full px-3 py-2 text-sm rounded-md bg-slate-900 text-white border border-white/20"
               />
             </div>
           </>
         )}
       </div>
-
-      <p className="text-xs text-slate-400 mt-2">
-        A API key fica apenas no browser e é enviada somente para o backend
-        desta POC. Nada é persistido.
+      <p className="text-xs text-slate-400 mt-3">
+        O provider de teste marca todo insumo da categoria <strong>pro</strong>{" "}
+        (Projeto) como inválido, sem gastar tokens.
       </p>
     </div>
   );

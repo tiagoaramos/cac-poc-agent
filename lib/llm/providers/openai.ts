@@ -5,24 +5,30 @@ export class OpenAIProvider implements LLMProvider {
   private apiKey: string;
   private model: string;
 
-  constructor(apiKey: string, model: string = "gpt-4o-mini") {
+  constructor(apiKey: string, model = "gpt-4o-mini") {
     this.apiKey = apiKey;
     this.model = model;
   }
 
   async chat(request: LLMRequest): Promise<LLMResponse> {
+    const body: Record<string, unknown> = {
+      model: this.model,
+      messages: request.messages,
+      temperature: request.temperature ?? 0.2,
+      max_tokens: request.maxTokens ?? 2048,
+    };
+
+    if (request.jsonMode) {
+      body.response_format = { type: "json_object" };
+    }
+
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${this.apiKey}`,
       },
-      body: JSON.stringify({
-        model: this.model,
-        messages: request.messages,
-        temperature: request.temperature ?? 0.7,
-        max_tokens: request.maxTokens ?? 1024,
-      }),
+      body: JSON.stringify(body),
     });
 
     if (!response.ok) {

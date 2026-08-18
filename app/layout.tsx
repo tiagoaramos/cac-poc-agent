@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
+import AppShell from "@/components/AppShell";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "POC LLM Assistant",
-  description: "Busca dados externos e processa com LLM",
+  title: "CAC Engenharia — Validação de insumos",
+  description:
+    "Portal de análise de insumos das obras da empresa 9999 com correção via API UAU",
 };
 
 export default function RootLayout({
@@ -13,7 +15,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="pt-BR">
-      <body className="min-h-screen antialiased">{children}</body>
+      <body className="min-h-screen antialiased">
+        <AppShell>{children}</AppShell>
+      </body>
     </html>
   );
 }

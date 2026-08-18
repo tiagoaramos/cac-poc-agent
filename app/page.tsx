@@ -1,119 +1,64 @@
 "use client";
 
-import { useState } from "react";
-import SearchForm from "@/components/SearchForm";
-import ResponseCard from "@/components/ResponseCard";
-import ConfigPanel from "@/components/ConfigPanel";
-
-interface LLMConfig {
-  provider: string;
-  apiKey: string;
-  model: string;
-}
-
-interface AssistantResponse {
-  content: string;
-  provider: string;
-  model: string;
-}
+import { useEffect, useState } from "react";
+import ObraCard from "@/components/ObraCard";
+import { UauObra } from "@/lib/uau/types";
 
 export default function Home() {
-  const [loading, setLoading] = useState(false);
-  const [response, setResponse] = useState<AssistantResponse | null>(null);
+  const [obras, setObras] = useState<UauObra[]>([]);
+  const [empresa, setEmpresa] = useState("9999");
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [showConfig, setShowConfig] = useState(false);
-  const [config, setConfig] = useState<LLMConfig>({
-    provider: "mock",
-    apiKey: "",
-    model: "",
-  });
 
-  async function handleSearch(query: string, question: string) {
-    setLoading(true);
-    setError(null);
-    setResponse(null);
-
-    try {
-      // 1. Busca dados na API externa
-      const searchRes = await fetch("/api/search", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query }),
-      });
-
-      if (!searchRes.ok) {
-        const err = await searchRes.json();
-        throw new Error(err.error || "Erro ao buscar dados");
+  useEffect(() => {
+    async function load() {
+      try {
+        const response = await fetch("/api/obras");
+        const data = await response.json();
+        if (!response.ok) {
+          throw new Error(data.error || "Não foi possível listar as obras");
+        }
+        setEmpresa(data.empresa);
+        setObras(data.obras || []);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Erro inesperado");
+      } finally {
+        setLoading(false);
       }
-
-      const searchData = await searchRes.json();
-
-      // 2. Envia para LLM com contexto
-      const askRes = await fetch("/api/ask", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          question,
-          context: searchData.summary
-            ? `Fonte: ${searchData.source}\nDados: ${JSON.stringify(searchData.data, null, 2)}\nResumo: ${searchData.summary}`
-            : undefined,
-          providerOverride:
-            config.provider !== "mock"
-              ? {
-                  provider: config.provider,
-                  apiKey: config.apiKey,
-                  model: config.model || undefined,
-                }
-              : undefined,
-        }),
-      });
-
-      if (!askRes.ok) {
-        const err = await askRes.json();
-        throw new Error(err.error || "Erro ao processar com LLM");
-      }
-
-      const llmResponse = await askRes.json();
-      setResponse(llmResponse);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Erro inesperado");
-    } finally {
-      setLoading(false);
     }
-  }
+
+    load();
+  }, []);
 
   return (
-    <main className="max-w-3xl mx-auto px-4 py-12">
-      <header className="mb-8 flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-slate-800">
-            POC LLM Assistant
-          </h1>
-          <p className="text-slate-500 mt-1">
-            Busca dados externos → processa com LLM → exibe resposta
-          </p>
-        </div>
-        <button
-          onClick={() => setShowConfig(!showConfig)}
-          className="text-sm px-3 py-1.5 rounded-md border border-slate-300 hover:bg-slate-100 transition"
-        >
-          ⚙️ Config
-        </button>
-      </header>
+    <section>
+      <div className="mb-8">
+        <h1 className="text-2xl font-bold text-slate-900">Obras da empresa {empresa}</h1>
+        <p className="text-slate-500 mt-1">
+          Selecione um projeto para analisar os insumos do orçamento e identificar
+          padrões de erro.
+        </p>
+      </div>
 
-      {showConfig && (
-        <ConfigPanel config={config} onConfigChange={setConfig} />
+      {loading && (
+        <p className="text-slate-500">Carregando obras na API UAU...</p>
       )}
 
-      <SearchForm onSubmit={handleSearch} loading={loading} />
-
       {error && (
-        <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
+        <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
           {error}
         </div>
       )}
 
-      {response && <ResponseCard response={response} />}
-    </main>
+      {!loading && !error && obras.length === 0 && (
+        <p className="text-slate-500">Nenhuma obra encontrada para esta empresa.</p>
+      )}
+
+      <div className="grid gap-4 sm:grid-cols-2">
+        {obras.map((obra) => (
+          <ObraCard key={obra.codigo} obra={obra} />
+        ))}
+      </div>
+    </section>
   );
 }
