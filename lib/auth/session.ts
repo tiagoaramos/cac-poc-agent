@@ -9,8 +9,8 @@ interface SessionPayload {
 function toBase64Url(bytes: ArrayBuffer | Uint8Array) {
   const array = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
   let binary = "";
-  for (const byte of array) {
-    binary += String.fromCharCode(byte);
+  for (let index = 0; index < array.length; index += 1) {
+    binary += String.fromCharCode(array[index]);
   }
   return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 }
