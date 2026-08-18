@@ -10,7 +10,7 @@ interface ConfigPanelProps {
 const PROVIDERS = [
   {
     value: "test",
-    label: "Teste (sem tokens)",
+    label: "Teste (regras provisórias)",
     needsKey: false,
   },
   { value: "openai", label: "OpenAI", needsKey: true },
@@ -84,8 +84,8 @@ export default function ConfigPanel({
         )}
       </div>
       <p className="text-xs text-slate-400 mt-3">
-        O provider de teste marca todo insumo da categoria <strong>pro</strong>{" "}
-        (Projeto) como inválido, sem gastar tokens.
+        Até que as regras sejam definidas, o provider de teste marca todo
+        insumo da categoria <strong>pro</strong> (Projeto) como inválido.
       </p>
     </div>
   );

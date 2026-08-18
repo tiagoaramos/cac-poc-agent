@@ -43,7 +43,7 @@ export class TestProvider implements LLMProvider {
       categoria: insumo.categoria || flaggedCategory,
       classificacao: "invalido",
       scoreConfianca: 0.99,
-      justificativa: `Provider de teste: todo insumo do tipo "${flaggedCategory}" é tratado como erro para validar o fluxo sem consumir tokens.`,
+      justificativa: `Até que as regras de validação sejam definidas, todo insumo do tipo "${flaggedCategory}" é tratado como erro.`,
       padraoErro: `tipo_insumo_${flaggedCategory}_sempre_invalido`,
       sugestaoCorrecao: {
         acao: "reclassify",
@@ -55,8 +55,8 @@ export class TestProvider implements LLMProvider {
 
     const summary =
       flagged.length === 0
-        ? `Nenhum insumo do tipo "${flaggedCategory}" encontrado. O provider de teste só marca esse tipo como erro.`
-        : `${flagged.length} insumo(s) do tipo "${flaggedCategory}" marcados como inválidos pelo provider de teste (sem chamada a LLM real).`;
+        ? `Nenhum insumo do tipo "${flaggedCategory}" encontrado. Até que as regras sejam definidas, apenas esse tipo é marcado como erro.`
+        : `${flagged.length} insumo(s) do tipo "${flaggedCategory}" marcados como inválidos até que as regras de validação sejam definidas.`;
 
     return {
       content: JSON.stringify({ summary, issues }),
